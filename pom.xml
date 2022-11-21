@@ -49,7 +49,7 @@
     <dependency>
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-ui</artifactId>
-      <version>1.6.11</version>
+      <version>1.6.13</version>
     </dependency>
 
     <dependency>
