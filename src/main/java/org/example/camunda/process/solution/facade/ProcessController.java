@@ -2,6 +2,7 @@ package org.example.camunda.process.solution.facade;
 
 import io.camunda.zeebe.client.ZeebeClient;
 import io.camunda.zeebe.client.api.response.EvaluateDecisionResponse;
+import io.camunda.zeebe.client.api.response.ProcessInstanceResult;
 import org.example.camunda.process.solution.ProcessConstants;
 import org.example.camunda.process.solution.ProcessVariables;
 import org.slf4j.Logger;
@@ -35,6 +36,26 @@ public class ProcessController {
         .latestVersion()
         .variables(variables)
         .send();
+  }
+
+  @PostMapping("/startWithResults")
+  public ProcessInstanceResult startProcessInstanceWithResults(
+      @RequestBody ProcessVariables variables) {
+
+    LOG.info(
+        "Starting process `" + ProcessConstants.BPMN_PROCESS_ID + "` with variables: " + variables);
+
+    ProcessInstanceResult result =
+        zeebe
+            .newCreateInstanceCommand()
+            .bpmnProcessId(ProcessConstants.BPMN_PROCESS_ID)
+            .latestVersion()
+            .variables(variables)
+            .withResult()
+            .send()
+            .join();
+
+    return result;
   }
 
   @PostMapping("/message/{messageName}/{correlationKey}")

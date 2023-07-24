@@ -6,12 +6,13 @@
 
 This is example code that demonstrates a few concepts:
 
+0. How to connect to SM
 1. How to evaluate a DMN Table directly (without having to run the associated BPMN process)
 2. How to run a BPM process end-to-end and get the result
 
-### Connecting to Self Managed
+### 0. Connecting to Self Managed
 
-If you use Camunda Helm charts to install a Self Managed environment, then you can use a configuration similar to the following to connect
+Here' a sample config for connecting a Zeebe Client to a Camunda 8 Self Managed environment.
 ```
 # Set this to the url of the Zeebe Gateway. Most likely, the Gateway is exposed by an ingress over port 443
 zeebe.client.broker.gatewayAddress=my.zeebe.gateway.com:443
@@ -24,14 +25,52 @@ zeebe.client.cloud.clientId=<YOUR_M2M_CLIENT_ID>
 zeebe.client.cloud.clientSecret=<YOUR_M2M_CLIENT_SECRET>
 ```
 
-### 1. Evaluate DMN Table directly
+### 1. Evaluate a DMN Decision directly
 
+The [ProcessController.java](src/main/java/org/example/camunda/process/solution/facade/ProcessController.java) file implements a few methods that are exposed as a rest api.
 
+The method named `EvaluateDecisionResponse` uses a [Zeebe Client](https://docs.camunda.io/docs/apis-tools/grpc/) that connects to a Camunda 8 Gateway and sends a request to evaluate a specific DMN Decision Id.
 
+For convenience, the method is exposed as a rest API endpoint. To run, send a `POST` request to [https://localhost:8080/process/dmn/eval/{decisionId}](https://localhost:8080/process/dmn/eval/{decisionId}).
 
-This code was started based on the  [camunda-8-process-solution-template project](https://github.com/camunda-community-hub/camunda-8-process-solution-template). The README file blow comes straight from the original project:
+The [gcp-regions.dmn](src/main/resources/models/gcp-regions.dmn) file contains a [DMN DRD](https://docs.camunda.io/docs/components/modeler/dmn/decision-requirements-graph/). The DRD includes a Decision Table named `Decision_gcpRegionsZones`.
+
+So, to call this decision, send a `POST` like so. You can pass `country` as input variable inside json request body.
+
+```java
+POST https://localhost:8080/process/dmn/eval/Decision_gcpRegionsZones
+```
+
+Here's a working example in PostMan:
+
+![](docs/postman1.png)
+
+### 2. Run BPMN Process with results
+
+The method `startProcessInstanceWithResults` inside the [ProcessController](src/main/java/org/example/camunda/process/solution/facade/ProcessController.java) uses a [Zeebe Client](https://docs.camunda.io/docs/apis-tools/grpc/) that connects to a Camunda 8 Gateway and sends a request to start a process instance and then wait for the instances to complete before returning results.
+
+For convenience, the method is exposed as a rest API endpoint. To run, send a `POST` request to [https://localhost:8080/process/startWithResults](https://localhost:8080/process/dmn/eval/startWithResults).
+
+The [camunda-process.bpmn](src/main/resources/models/camunda-process.bpmn) file contains a defintion of a [BPMN Process](https://docs.camunda.io/docs/components/modeler/bpmn/bpmn-primer/) that calls a single Business Rule task, which in turn runs a DMN Decision.
+
+You can use the `startWithResults` method to run a process instance and get the results of the Business Rule (and corresponding DMN Decision)
+
+For example, send a `POST` like so. You can pass `country` as input variable inside json request body.
+
+```java
+POST https://localhost:8080/process/dmn/eval/startWithResults
+```
+
+Here's a working example in PostMan:
+
+![](docs/postman2.png)
+
+### Process Solution Template
+
+This project was started based on the [camunda-8-process-solution-template project](https://github.com/camunda-community-hub/camunda-8-process-solution-template). The README file below describes more:
 
 # Process Solution Template for Camunda Platform 8 using Java and Spring Boot
+
 
 This repository contains a Java application template for Camunda Platform 8 using Spring Boot
 and a [docker-compose.yaml](docker-compose.yaml) file for local development. For production setups we recommend to use our [helm charts](https://docs.camunda.io/docs/self-managed/platform-deployment/kubernetes-helm/).
