@@ -33,14 +33,19 @@ public class ProcessController {
   }
 
   @PostMapping("/start")
-  public void startProcessInstance(@RequestBody ProcessVariables variables) {
+  public void startProcessInstance(
+      @RequestBody ProcessVariables variables) {
+    String processId = ProcessConstants.BPMN_PROCESS_ID;
+    if(variables.getProcessId() != null && !variables.getProcessId().isEmpty()) {
+       processId = variables.getProcessId();
+    }
 
     LOG.info(
-        "Starting process `" + ProcessConstants.BPMN_PROCESS_ID + "` with variables: " + variables);
+        "Starting process `" + processId + "` with variables: " + variables);
 
     zeebe
         .newCreateInstanceCommand()
-        .bpmnProcessId(ProcessConstants.BPMN_PROCESS_ID)
+        .bpmnProcessId(processId)
         .latestVersion()
         .variables(variables)
         .send();
