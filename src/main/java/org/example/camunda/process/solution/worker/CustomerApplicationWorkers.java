@@ -1,11 +1,8 @@
 package org.example.camunda.process.solution.worker;
 
-import io.camunda.zeebe.client.ZeebeClient;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
 import io.camunda.zeebe.client.api.worker.JobClient;
-import io.camunda.zeebe.client.api.worker.JobHandler;
 import io.camunda.zeebe.spring.client.annotation.JobWorker;
-import io.camunda.zeebe.spring.client.annotation.VariablesAsType;
 import org.example.camunda.process.solution.ProcessVariables;
 import org.example.camunda.process.solution.dto.CustomerApplication;
 import org.example.camunda.process.solution.service.MyService;
@@ -13,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
 
 @Component
 public class CustomerApplicationWorkers {
@@ -56,6 +52,10 @@ public class CustomerApplicationWorkers {
     LOG.info("Invoking ApproveApplication");
     ProcessVariables variables = job.getVariablesAsType(ProcessVariables.class);
 
+    if(variables.getCustomer().getAge() < 0 || variables.getCustomer().getAge() > 100) {
+      throw new RuntimeException("Customer age must be greater than 0 and less than 100");
+    }
+
     variables.getCustomerApplication().setApprovalStatus("approved");
 
     client.newCompleteCommand(job.getKey())
@@ -68,10 +68,22 @@ public class CustomerApplicationWorkers {
     LOG.info("Invoking RejectApplication");
     ProcessVariables variables = job.getVariablesAsType(ProcessVariables.class);
 
+    if(variables.getCustomer().getAge() < 0 || variables.getCustomer().getAge() > 100) {
+      sendFailCommand(client, job);
+      return;
+    }
+
     variables.getCustomerApplication().setApprovalStatus("rejected");
 
     client.newCompleteCommand(job.getKey())
         .variables(variables)
         .send().join();
+  }
+
+  public void sendFailCommand(final JobClient client, final ActivatedJob job) {
+    client.newFailCommand(job.getKey())
+        .retries(0)
+        .send()
+        .join();
   }
 }
