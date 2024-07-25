@@ -53,7 +53,7 @@
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
       <version>2.2.0</version>
-   </dependency>
+    </dependency>
 
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -126,7 +126,7 @@
         <artifactId>exec-maven-plugin</artifactId>
         <version>3.3.0</version>
         <configuration>
-          <mainClass>org.camunda.community.examples.twitter.TwitterExampleApplication</mainClass>
+          <mainClass>org.example.camunda.process.solution.ProcessApplication</mainClass>
         </configuration>
       </plugin>
       <plugin>
