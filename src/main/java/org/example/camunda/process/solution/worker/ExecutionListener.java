@@ -1,6 +1,5 @@
 package org.example.camunda.process.solution.worker;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import io.camunda.zeebe.client.api.response.ActivatedJob;
 import io.camunda.zeebe.client.api.worker.JobClient;
 import io.camunda.zeebe.spring.client.annotation.CustomHeaders;
@@ -10,21 +9,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 @Component
-public class UserTaskWorker {
+public class ExecutionListener {
 
-  private static final Logger LOG = LoggerFactory.getLogger(UserTaskWorker.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ExecutionListener.class);
 
-  @JobWorker(
-      type = "io.camunda.zeebe:userTask",
-      autoComplete = false,
-      timeout = 2592000000L) // set timeout to 30 days
-  public void listenUserTask(
+  @JobWorker(type = "sampleExecListener")
+  public void execListenWorker(
       final JobClient client,
       final ActivatedJob job,
       @VariablesAsType Map<String, Object> variables,
@@ -32,9 +25,9 @@ public class UserTaskWorker {
 
     try {
 
-      String execListenerName = "userTaskWorker";
+      String execListenerName = "sampleExecListener";
 
-      LOG.info("User Task Worker triggered with variables: " + variables);
+      LOG.info("Execution Listener Worker triggered with variables: " + variables);
 
       String processDefinitionKey = Long.toString(job.getProcessDefinitionKey());
       LOG.info(execListenerName + ": processDefinitionKey: " + processDefinitionKey);
@@ -60,11 +53,9 @@ public class UserTaskWorker {
       if (!job.getCustomHeaders().isEmpty()) {
         if (job.getCustomHeaders().containsKey("io.camunda.zeebe:assignee")) {
           assignee = job.getCustomHeaders().get("io.camunda.zeebe:assignee");
-          LOG.info(execListenerName + ": assignee: " + assignee);
         }
         if (job.getCustomHeaders().containsKey("io.camunda.zeebe:candidateGroups")) {
           groups = job.getCustomHeaders().get("io.camunda.zeebe:candidateGroups");
-          LOG.info(execListenerName + ": groups: " + groups);
           //JsonUtils.toParametrizedObject(groups, new TypeReference<List<String>>() {})
         }
       }
